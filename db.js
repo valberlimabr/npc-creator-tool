@@ -52,5 +52,51 @@ async function createNPC(npcData) {
     }
   }
   
-  module.exports = { connectToDB, checkEntry, createNPC };
+// Função de busca de NPCs com filtros
+// Função de busca de NPCs com filtros
+async function searchNPCs({ entry, name, subname }) {
+  try {
+    let query = 'SELECT entry, name, subname, minlevel, maxlevel FROM creature_template WHERE 1=1';
+    const params = [];
+
+    if (entry) {
+      query += ' AND entry = ?';
+      params.push(entry);
+    }
+    if (name) {
+      query += ' AND name LIKE ?';
+      params.push(`%${name}%`);
+    }
+    if (subname) {
+      query += ' AND subname LIKE ?';
+      params.push(`%${subname}%`);
+    }
+
+    console.log('Consulta SQL gerada:', query);
+    console.log('Parâmetros:', params);
+
+    const [rows] = await connection.execute(query, params);
+    return rows;
+  } catch (error) {
+    console.error('Erro ao buscar NPCs:', error.message);
+    throw error;
+  }
+}
+
+async function updateNPC({ entry, name, subname }) {
+  try {
+    const query = `
+      UPDATE creature_template
+      SET name = ?, subname = ?
+      WHERE entry = ?
+    `;
+    await connection.execute(query, [name, subname, entry]);
+    console.log(`NPC ${entry} atualizado com sucesso!`);
+  } catch (error) {
+    console.error('Erro ao atualizar NPC:', error.message);
+    throw error;
+  }
+}
+
+  module.exports = { connectToDB, checkEntry, createNPC, searchNPCs, updateNPC };
   

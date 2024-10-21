@@ -1,6 +1,8 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
+  buscarNPCs: (filtros) => ipcRenderer.invoke('buscar-npcs', filtros),
+  editarNPC: (npc) => ipcRenderer.invoke('editar-npc', npc),
   minimizeWindow: () => ipcRenderer.send('minimize-window'),
   maximizeWindow: () => ipcRenderer.send('maximize-window'),
   closeWindow: () => ipcRenderer.send('cl-window'),

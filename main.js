@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 
-// Dynamic import do 'electron-store' com tratamento completo de erros
+// Dynamic import do 'electron-store'
 let store;
 
 (async () => {
@@ -15,17 +15,18 @@ let store;
   }
 })();
 
-const { connectToDB, checkEntry, createNPC } = require('./db');
+const { connectToDB, checkEntry, createNPC, searchNPCs, updateNPC } = require('./db');
 let mainWindow;
 
+//Renderiza a Janela
 app.whenReady().then(() => {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
     autoHideMenuBar: true,
-    titleBarStyle: 'hidden', // Remove a barra de título
+    titleBarStyle: 'hidden', // 
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'), // Adicione isso
+      preload: path.join(__dirname, 'preload.js'), // 
       enableRemoteModule: false,
       nodeIntegration: true,
       contextIsolation: true
@@ -46,7 +47,7 @@ app.whenReady().then(() => {
     ipcMain.on('minimize-window', () => {
       mainWindow.minimize();
     });
-    // Impede redimensionamento manual mantendo o tamanho fixo
+    // Impede redimensionamento manual
     mainWindow.on('resize', () => {
       const { x, y } = mainWindow.getBounds();
       mainWindow.setBounds({ x, y, width: 1280, height: 720 });
@@ -61,10 +62,11 @@ ipcMain.on('connect-db', async (event, config) => {
     const connected = await connectToDB(config);
     if (connected) {
       console.log('Conectado ao banco de dados com sucesso.');
-      store.set('credentials', config);  // Armazena credenciais no cache
+      store.set('credentials', config);
       event.reply('db-connected');
     } else {
-      console.error('Erro ao conectar ao banco de dados.');
+      console.error('123Erro ao conectar ao banco de dados.');
+      event.reply('db-connected-false');
     }
   } catch (error) {
     console.error('Erro durante a conexão:', error);
@@ -98,5 +100,27 @@ ipcMain.on('create-npc', async (event, npcData) => {
     console.log('NPC e modelo criados com sucesso!');
   } catch (error) {
     console.error('Erro ao criar NPC ou modelo:', error.message);
+  }
+});
+
+ipcMain.handle('buscar-npcs', async (event, filtros) => {
+  try {
+    const result = await searchNPCs(filtros);
+    console.log('NPCs encontrados:', result); // Para confirmar se a consulta está sendo feita
+    return result;
+  } catch (error) {
+    console.error('Erro ao buscar NPCs:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('editar-npc', async (event, npc) => {
+  try {
+    await updateNPC(npc);
+    console.log('NPC atualizado:', npc);
+    return true;
+  } catch (error) {
+    console.error('Erro ao atualizar NPC:', error);
+    return false;
   }
 });
